@@ -20,7 +20,24 @@ let tasks = [
 
 // Routes API
 app.get('/api/projects', (req, res) => res.json(projects));
+app.get('/api/projects/:id', (req, res) => {
+  const project = projects.find(p => p.id === req.params.id);
+  if (project) {
+    res.json(project);
+  } else {
+    res.status(404).json({ error: 'Projet non trouvé' });
+  }
+});
+
 app.get('/api/tasks', (req, res) => res.json(tasks));
+app.get('/api/tasks/:id', (req, res) => {
+  const task = tasks.find(t => t.id === req.params.id);
+  if (task) {
+    res.json(task);
+  } else {
+    res.status(404).json({ error: 'Tâche non trouvée' });
+  }
+});
 
 app.post('/api/tasks', (req, res) => {
   const newTask = { id: 't' + Date.now(), ...req.body };
