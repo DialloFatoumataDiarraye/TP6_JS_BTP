@@ -95,18 +95,26 @@ const saveEditedTask = async () => {
   }
 }
 
-const handleDeleteTask = async (taskId) => {
-  if (window.confirm("Êtes-vous sûr de vouloir supprimer cette tâche ?")) {
-    try {
-      const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
-        method: 'DELETE'
-      })
-      if (!response.ok) throw new Error('Erreur lors de la suppression')
-      
-      tasks.value = tasks.value.filter(t => t.id !== taskId)
-    } catch (err) {
-      alert(err.message)
-    }
+const taskToDelete = ref(null)
+
+const confirmDeleteTask = (taskId) => {
+  taskToDelete.value = tasks.value.find(t => t.id === taskId)
+}
+
+const handleDeleteTask = async () => {
+  if (!taskToDelete.value) return
+  
+  try {
+    const taskId = taskToDelete.value.id
+    const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+      method: 'DELETE'
+    })
+    if (!response.ok) throw new Error('Erreur lors de la suppression')
+    
+    tasks.value = tasks.value.filter(t => t.id !== taskId)
+    taskToDelete.value = null
+  } catch (err) {
+    alert(err.message)
   }
 }
 
@@ -201,7 +209,7 @@ const getTasksByStatus = (status) => {
           :tasks="getTasksByStatus(col.id)"
           @task-dropped="handleTaskDropped"
           @edit-task="handleEditTask"
-          @delete-task="handleDeleteTask"
+          @delete-task="confirmDeleteTask"
         />
       </div>
 
@@ -235,6 +243,18 @@ const getTasksByStatus = (status) => {
               <button type="button" class="btn" @click="editingTask = null">Annuler</button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Modale de confirmation de suppression -->
+      <div v-if="taskToDelete" class="modal-overlay" @click.self="taskToDelete = null">
+        <div class="modal card confirmation-modal">
+          <h3>Confirmer la suppression</h3>
+          <p>Êtes-vous sûr de vouloir supprimer la tâche <strong>"{{ taskToDelete.titre }}"</strong> ? Cette action est irréversible.</p>
+          <div class="actions mt-2">
+            <button type="button" class="btn btn-danger" @click="handleDeleteTask">Supprimer</button>
+            <button type="button" class="btn" @click="taskToDelete = null">Annuler</button>
+          </div>
         </div>
       </div>
     </div>
@@ -367,5 +387,15 @@ const getTasksByStatus = (status) => {
   padding: 0.5rem;
   border: 1px solid var(--border-grey);
   border-radius: 4px;
+}
+
+.confirmation-modal {
+  max-width: 400px;
+  text-align: center;
+}
+
+.confirmation-modal p {
+  margin: 1.5rem 0;
+  color: var(--dark-grey);
 }
 </style>
