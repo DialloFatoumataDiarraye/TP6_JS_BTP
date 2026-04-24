@@ -7,11 +7,12 @@ Application de gestion de chantiers utilisant une architecture propre avec un ba
 - [x] Structure Frontend (Vue 3, Vite, Vue Router).
 - [x] Structure Backend (Express, API RESTful).
 - [x] Liste des chantiers (Projets).
-- [x] Tableau Kanban avec 4 colonnes (À faire, En cours, Bloqué, Terminé).
-- [x] Filtrage par statut, priorité et recherche textuelle.
-- [x] Formulaire d'ajout de tâche avec validation et envoi au backend.
-- [x] Détails des projets et des tâches (Vue Router).
-- [x] Interface propre inspirée des couleurs du BTP (Bleu, Orange, Gris).
+- [x] Tableau Kanban interactif avec Drag & Drop natif (HTML5).
+- [x] Filtres avancés combinés (texte, priorité, responsable) et options de tri (échéance, priorité).
+- [x] Gestion complète des tâches (CRUD) : création, modification, suppression avec confirmation.
+- [x] Indicateurs visuels avancés (retards, alertes de dates, compteurs par colonne).
+- [x] Détails complets et ajout de commentaires / notes sur un chantier ou une tâche.
+- [x] Interface propre inspirée des couleurs du BTP (Bleu, Orange, Gris) avec gestion des états (chargement, erreur).
 
 ## Architecture
 - `frontend/` : Application Vue.js 3 générée avec Vite.
@@ -21,7 +22,7 @@ Application de gestion de chantiers utilisant une architecture propre avec un ba
 ### 1. Backend
 - `cd backend`
 - `npm install`
-- `npm start` (Le serveur démarre sur le port 3000)
+- `npm start` (Le serveur démarre sur le port **3001** pour éviter les conflits)
 
 ### 2. Frontend
 - `cd frontend`

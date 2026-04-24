@@ -8,7 +8,7 @@ const error = ref(null)
 
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:3000/api/projects')
+    const response = await fetch('http://localhost:3001/api/projects')
     if (!response.ok) throw new Error('Erreur de réseau')
     projects.value = await response.json()
   } catch (err) {

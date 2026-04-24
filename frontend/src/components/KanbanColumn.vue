@@ -1,5 +1,5 @@
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, defineEmits, ref } from 'vue'
 import TaskCard from './TaskCard.vue'
 
 const props = defineProps({
@@ -7,19 +7,40 @@ const props = defineProps({
   tasks: Array,
   columnId: String
 })
+
+const emit = defineEmits(['task-dropped', 'dragstart', 'edit-task', 'delete-task'])
+
+const isDragOver = ref(false)
+
+const onDrop = (event) => {
+  isDragOver.value = false
+  const taskId = event.dataTransfer.getData('taskId')
+  if (taskId) {
+    emit('task-dropped', { taskId, newStatus: props.columnId })
+  }
+}
 </script>
 
 <template>
-  <div class="kanban-column">
+  <div 
+    class="kanban-column"
+    :class="{ 'drag-over': isDragOver }"
+    @dragover.prevent="isDragOver = true"
+    @dragleave.prevent="isDragOver = false"
+    @drop="onDrop"
+  >
     <div class="column-header">
       <h3>{{ title }}</h3>
-      <span class="task-count">{{ tasks.length }}</span>
+      <span class="task-count" :class="{ 'count-active': tasks.length > 0 }">{{ tasks.length }}</span>
     </div>
     <div class="column-content">
       <TaskCard 
         v-for="task in tasks" 
         :key="task.id" 
-        :task="task" 
+        :task="task"
+        @dragstart="(t, e) => { e.dataTransfer.setData('taskId', t.id); emit('dragstart', t, e); }"
+        @edit-task="(t) => emit('edit-task', t)"
+        @delete-task="(id) => emit('delete-task', id)"
       />
       <div v-if="tasks.length === 0" class="empty-msg">
         Aucune tâche
@@ -35,6 +56,12 @@ const props = defineProps({
   min-width: 280px;
   display: flex;
   flex-direction: column;
+  transition: background-color 0.2s;
+}
+
+.kanban-column.drag-over {
+  background-color: #E2E8F0;
+  border: 2px dashed var(--secondary-blue);
 }
 
 .column-header {
@@ -58,6 +85,11 @@ const props = defineProps({
   border-radius: 12px;
   font-size: 0.85rem;
   font-weight: bold;
+}
+
+.task-count.count-active {
+  background-color: var(--secondary-blue);
+  color: white;
 }
 
 .column-content {

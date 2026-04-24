@@ -1,10 +1,12 @@
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, defineEmits } from 'vue'
 import { RouterLink } from 'vue-router'
 
 const props = defineProps({
   task: Object
 })
+
+const emit = defineEmits(['dragstart', 'edit-task', 'delete-task'])
 
 const getPriorityColor = (priority) => {
   switch (priority) {
@@ -14,14 +16,32 @@ const getPriorityColor = (priority) => {
     default: return 'var(--dark-grey)';
   }
 }
+
+const onDragStart = (event) => {
+  event.dataTransfer.dropEffect = 'move'
+  event.dataTransfer.effectAllowed = 'move'
+  emit('dragstart', props.task, event)
+}
+
+const isOverdue = (dateString) => {
+  const taskDate = new Date(dateString)
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  return taskDate < today && props.task.statut !== 'done'
+}
 </script>
 
 <template>
-  <div class="card task-card">
-    <h4>{{ task.titre }}</h4>
+  <div 
+    class="card task-card" 
+    :class="{ 'overdue': isOverdue(task.echeance) }"
+    draggable="true" 
+    @dragstart="onDragStart"
+  >
+    <h4>{{ task.titre }} <span v-if="isOverdue(task.echeance)" class="warning-icon" title="En retard">⚠️</span></h4>
     <div class="task-details">
       <p class="resp">👤 {{ task.responsable }}</p>
-      <p class="date">📅 {{ new Date(task.echeance).toLocaleDateString() }}</p>
+      <p class="date" :class="{ 'text-danger': isOverdue(task.echeance) }">📅 {{ new Date(task.echeance).toLocaleDateString() }}</p>
       <p class="priority">
         Priorité: 
         <span class="prio-badge" :style="{ backgroundColor: getPriorityColor(task.priorite) }">
@@ -31,6 +51,8 @@ const getPriorityColor = (priority) => {
     </div>
     <div class="actions">
       <RouterLink :to="`/tasks/${task.id}`" class="btn btn-sm">Détails</RouterLink>
+      <button @click="emit('edit-task', task)" class="btn btn-sm btn-outline">✏️</button>
+      <button @click="emit('delete-task', task.id)" class="btn btn-sm btn-danger">🗑️</button>
     </div>
   </div>
 </template>
@@ -41,6 +63,25 @@ const getPriorityColor = (priority) => {
   margin-bottom: 1rem;
   border-left: 4px solid var(--secondary-blue);
   background-color: var(--white);
+  cursor: grab;
+}
+
+.task-card:active {
+  cursor: grabbing;
+}
+
+.task-card.overdue {
+  border-left-color: var(--danger);
+  background-color: #FFF5F5;
+}
+
+.warning-icon {
+  font-size: 0.9rem;
+}
+
+.text-danger {
+  color: var(--danger);
+  font-weight: bold;
 }
 
 .task-card h4 {
@@ -74,8 +115,29 @@ const getPriorityColor = (priority) => {
   border: 1px solid var(--border-grey);
 }
 
-.btn-sm:hover {
-  background-color: var(--border-grey);
-  color: var(--primary-blue);
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 1px solid var(--border-grey);
+}
+
+.btn-outline:hover {
+  background-color: var(--light-grey);
+}
+
+.btn-danger {
+  background-color: transparent;
+  color: var(--danger);
+  border: 1px solid var(--danger);
+}
+
+.btn-danger:hover {
+  background-color: var(--danger);
+  color: white;
 }
 </style>

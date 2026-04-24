@@ -33,7 +33,7 @@ const submitTask = async () => {
       projetId: props.projectId
     }
 
-    const response = await fetch('http://localhost:3000/api/tasks', {
+    const response = await fetch('http://localhost:3001/api/tasks', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

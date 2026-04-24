@@ -12,7 +12,7 @@ const error = ref(null)
 
 const fetchTaskData = async () => {
   try {
-    const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`)
+    const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`)
     if (!response.ok) throw new Error('Tâche non trouvée')
     task.value = await response.json()
   } catch (err) {
@@ -30,6 +30,37 @@ const getPriorityColor = (priority) => {
     case 'medium': return 'var(--orange)';
     case 'low': return 'var(--success)';
     default: return 'var(--dark-grey)';
+  }
+}
+
+const newComment = ref('')
+
+const addComment = async () => {
+  if (!newComment.value.trim()) return
+  
+  const commentObj = {
+    id: Date.now(),
+    auteur: "Conducteur de travaux", // Utilisateur simulé
+    texte: newComment.value,
+    date: new Date().toISOString()
+  }
+  
+  const updatedTask = { ...task.value }
+  if (!updatedTask.commentaires) updatedTask.commentaires = []
+  updatedTask.commentaires.push(commentObj)
+  
+  try {
+    const response = await fetch(`http://localhost:3001/api/tasks/${taskId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updatedTask)
+    })
+    if (!response.ok) throw new Error('Erreur lors de l\'ajout du commentaire')
+    
+    task.value = await response.json()
+    newComment.value = ''
+  } catch (err) {
+    alert(err.message)
   }
 }
 
@@ -83,6 +114,27 @@ const formatStatus = (status) => {
           <span class="label">ID Tâche</span>
           <span class="value id-text">#{{ task.id }}</span>
         </div>
+      </div>
+      
+      <div class="comments-section mt-4">
+        <h3>Commentaires</h3>
+        <div class="comments-list">
+          <div v-for="c in task.commentaires" :key="c.id" class="comment">
+            <div class="comment-header">
+              <strong>{{ c.auteur }}</strong>
+              <small>{{ new Date(c.date).toLocaleString() }}</small>
+            </div>
+            <p>{{ c.texte }}</p>
+          </div>
+          <div v-if="!task.commentaires || task.commentaires.length === 0" class="empty-msg">
+            Aucun commentaire.
+          </div>
+        </div>
+        
+        <form @submit.prevent="addComment" class="comment-form mt-2">
+          <textarea v-model="newComment" placeholder="Ajouter un commentaire..." rows="3" required></textarea>
+          <button type="submit" class="btn btn-primary mt-1">Commenter</button>
+        </form>
       </div>
     </div>
   </div>
@@ -152,5 +204,48 @@ const formatStatus = (status) => {
 .id-text {
   color: #718096;
   font-family: monospace;
+}
+
+.mt-4 { margin-top: 2rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-1 { margin-top: 0.5rem; }
+
+.comments-section h3 {
+  border-bottom: 1px solid var(--border-grey);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.comment {
+  background-color: var(--light-grey);
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.comment-header small {
+  color: #718096;
+}
+
+.comment-form textarea {
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid var(--border-grey);
+  border-radius: 8px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+.empty-msg {
+  color: #A0AEC0;
+  font-style: italic;
+  margin-bottom: 1rem;
 }
 </style>
