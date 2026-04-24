@@ -517,17 +517,25 @@ function viewKanban(projetId) {
   const kanbanCols = columns.map(col => {
     const colTasks = projetTasks.filter(t => t.statut === col.id);
 
-    const taskCards = colTasks.map(t => `
-      <!-- TaskCard — clic ouvre le détail de la tâche -->
-      <div class="task-card" onclick="route('taskDetail', {taskId:'${t.id}'})">
-        <div class="task-card-title">${t.titre}</div>
-        <div class="task-card-meta">
-          <span class="badge ${prioBadge(t.priorite)}">${prioLabel(t.priorite)}</span>
-        </div>
-        <div class="task-card-resp">👤 ${t.responsable}</div>
-        <div class="task-card-date">📅 Échéance : ${formatDate(t.echeance)}</div>
-      </div>
-    `).join('');
+  const taskCards = colTasks.map(t => `
+  <div class="task-card">
+    <div class="task-card-title">${t.titre}</div>
+    <div class="task-card-meta">
+      <span class="badge ${prioBadge(t.priorite)}">${prioLabel(t.priorite)}</span>
+    </div>
+    <div class="task-card-resp">👤 ${t.responsable}</div>
+    
+    <div class="task-card-move" style="margin-top:10px; border-top:1px solid #eee; padding-top:5px;">
+      <label style="font-size:10px; color:gray;">Déplacer vers :</label>
+      <select onchange="updateTaskStatus('${t.id}', this.value, '${projetId}')" style="font-size:11px; width:100%">
+        <option value="todo"    ${t.statut === 'todo'    ? 'selected' : ''}>📋 À faire</option>
+        <option value="doing"   ${t.statut === 'doing'   ? 'selected' : ''}>⚡ En cours</option>
+        <option value="blocked" ${t.statut === 'blocked' ? 'selected' : ''}>🚫 Bloqué</option>
+        <option value="done"    ${t.statut === 'done'    ? 'selected' : ''}>✅ Terminé</option>
+      </select>
+    </div>
+  </div>
+`).join('');
 
     return `
       <!-- KanbanColumn — composant colonne réutilisable (props: title, tasks) -->
@@ -804,6 +812,50 @@ function showToast(msg) {
   t.textContent = msg;
   t.classList.remove('hidden');
   setTimeout(() => t.classList.add('hidden'), 2500);
+}
+async function updateTaskStatus(taskId, newStatus) {
+    try {
+        // 1. Appel au serveur (backend/server.js)
+        const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: newStatus })
+        });
+
+        if (response.ok) {
+            // 2. Mise à jour de l'affichage sans recharger la page
+            // On cherche la tâche dans ton tableau local et on change son statut
+            const task = tasks.find(t => t.id === taskId);
+            if (task) task.status = newStatus;
+            
+            // 3. Relancer la fonction qui dessine ton Kanban pour voir le changement
+            renderKanban(); 
+        }
+    } catch (error) {
+        console.error("Erreur lors du changement de statut", error);
+    }
+}
+async function updateTaskStatus(taskId, newStatut, projetId) {
+  try {
+    // 1. Appel au backend pour sauvegarder le changement
+    const response = await fetch(`http://localhost:3000/api/tasks/${taskId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statut: newStatut })
+    });
+
+    if (!response.ok) throw new Error("Erreur serveur");
+
+    // 2. Mise à jour de la donnée locale (pour l'affichage)
+    const task = tasks.find(t => t.id === taskId);
+    if (task) task.statut = newStatut;
+
+    // 3. Rafraîchir l'écran du Kanban immédiatement
+    route('kanban', { projetId: projetId });
+    
+  } catch (err) {
+    alert("Impossible de déplacer la tâche : " + err.message);
+  }
 }
 
 // ── Démarrage de l'application ──

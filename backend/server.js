@@ -27,6 +27,23 @@ app.post('/api/tasks', (req, res) => {
   tasks.push(newTask);
   res.status(201).json(newTask);
 });
+// Route pour mettre à jour le statut d'une tâche
+app.patch('/api/tasks/:id', (req, res) => {
+  const { id } = req.params;
+  const { statut } = req.body; // On récupère le nouveau statut envoyé par le frontend
+
+  // On cherche la tâche dans le tableau
+  const taskIndex = tasks.findIndex(t => t.id === id);
+
+  if (taskIndex !== -1) {
+    // On met à jour uniquement le statut
+    tasks[taskIndex].statut = statut;
+    console.log(`✅ Statut mis à jour pour la tâche ${id} : ${statut}`);
+    res.json(tasks[taskIndex]);
+  } else {
+    res.status(404).json({ message: "Tâche introuvable" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`✅ Serveur BuildFlow BTP actif sur http://localhost:${PORT}`);
